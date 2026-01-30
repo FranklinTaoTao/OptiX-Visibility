@@ -21,6 +21,7 @@
 #include <stdexcept>
 #include <algorithm>
 
+
 namespace {
 
 static void context_log_cb(unsigned int level, const char* tag, const char* message, void*)
@@ -291,7 +292,7 @@ static void create_pipeline(OptixVisibility::Impl* impl)
             impl->context,
             &module_options,
             &pipeline_options,
-            optix_programs_ptx,
+            optix_programs_ptx_cstr(),
             optix_programs_ptx_len,
             nullptr, nullptr, // log, logSize are provided by macro
             &impl->module

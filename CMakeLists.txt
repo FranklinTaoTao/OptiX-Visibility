@@ -44,12 +44,16 @@ file(MAKE_DIRECTORY ${PTX_DIR})
 
 set(PTX_OUTPUT ${PTX_DIR}/optix_programs.ptx)
 
+set(_ptx_host_flags "")
+if(UNIX AND NOT APPLE)
+  set(_ptx_host_flags "-Xcompiler=-fPIC")
+endif()
+
 add_custom_command(
   OUTPUT ${PTX_OUTPUT}
   COMMAND ${CUDAToolkit_NVCC_EXECUTABLE}
           -std=c++17
           -lineinfo
-          -Xcompiler=-fPIC
           -I${CMAKE_CURRENT_SOURCE_DIR}/src
           -I${OPTIX_INCLUDE_DIR}
           -I${CUDAToolkit_INCLUDE_DIRS}
@@ -85,6 +89,10 @@ pybind11_add_module(optix_visibility MODULE
   ${PTX_HEADER}
 )
 
+if(WIN32)
+  target_compile_definitions(optix_visibility PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
+endif()
+
 add_dependencies(optix_visibility optix_ptx)
 
 target_include_directories(optix_visibility PRIVATE
@@ -97,8 +105,12 @@ target_include_directories(optix_visibility PRIVATE
 target_link_libraries(optix_visibility PRIVATE
   CUDA::cudart
   CUDA::cuda_driver
-  dl
 )
+
+if(UNIX AND NOT APPLE)
+  target_link_libraries(optix_visibility PRIVATE dl)
+endif()
+
 
 # Nice errors
 target_compile_definitions(optix_visibility PRIVATE PYBIND11_DETAILED_ERROR_MESSAGES=1)

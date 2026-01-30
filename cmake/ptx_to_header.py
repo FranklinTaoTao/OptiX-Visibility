@@ -11,20 +11,31 @@ def main():
     out_path = Path(sys.argv[2])
     symbol   = sys.argv[3]
 
-    ptx_text = ptx_path.read_text()
+    data = ptx_path.read_bytes()
 
-    delim = "OPTIX_PTX_EMBED"
+    # Emit as a byte array to avoid MSVC "string too big" (C2026)
+    # Keep formatting friendly: 12 bytes per line
+    bytes_per_line = 12
+
     out = []
     out.append("#pragma once\n")
-    out.append("#include <cstddef>\n\n")
-    out.append(f"static const char {symbol}[] = R\"{delim}(\n")
-    out.append(ptx_text)
-    if not ptx_text.endswith("\n"):
-        out.append("\n")
-    out.append(f"){delim}\";\n\n")
-    out.append(f"static const std::size_t {symbol}_len = sizeof({symbol});\n")
+    out.append("#include <cstddef>\n")
+    out.append("#include <cstdint>\n\n")
 
-    out_path.write_text("".join(out))
+    out.append(f"// Embedded PTX from: {ptx_path.name}\n")
+    out.append(f"static const std::uint8_t {symbol}[] = {{\n")
+
+    for i in range(0, len(data), bytes_per_line):
+        chunk = data[i:i+bytes_per_line]
+        out.append("  " + ", ".join(f"0x{b:02x}" for b in chunk) + ",\n")
+
+    out.append("};\n\n")
+    out.append(f"static const std::size_t {symbol}_len = sizeof({symbol});\n")
+    out.append(f"static inline const char* {symbol}_cstr() {{\n")
+    out.append(f"  return reinterpret_cast<const char*>({symbol});\n")
+    out.append("}\n")
+
+    out_path.write_text("".join(out), encoding="utf-8")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,23 @@
+[build-system]
+requires = ["scikit-build-core>=0.9", "pybind11>=2.11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "optix-visibility"
+version = "0.1.0"
+description = "OptiX visibility extension (pybind11 + CUDA)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name="Franklin"}]
+
+[tool.scikit-build]
+# Tell scikit-build-core where your Python package is
+wheel.packages = ["python/optix_visibility"]
+
+# Optional but useful:
+cmake.minimum-version = "3.24"
+build.verbose = true
+
+# You can predefine CMake cache entries here if you want defaults:
+# cmake.args = ["-DCMAKE_CUDA_ARCHITECTURES=89"]
